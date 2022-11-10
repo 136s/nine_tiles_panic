@@ -9,5 +9,6 @@
         "--ignore=E203,W503,W504"
     ],
     "python.formatting.provider": "black",
-    "editor.formatOnSave": true
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "DavidAnson.vscode-markdownlint"
 }
