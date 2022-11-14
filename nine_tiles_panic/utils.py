@@ -4,6 +4,7 @@ import itertools
 import math
 import os
 import re
+import sqlite3
 from typing import Generator, List, Tuple, Union
 
 from PIL import Image, ImageDraw
@@ -15,6 +16,8 @@ from town import Town
 LEN_SIDE = config.LEN_SIDE
 NUM_TILE = config.NUM_TILE
 OUT_FILENAME = config.OUT_FILENAME
+OUT_DBNAME = config.OUT_DBNAME
+NUM_THEME = config.NUM_THEME
 
 
 class View:
@@ -442,3 +445,42 @@ class Search:
             if output is not None:
                 Search.write(pattern + "," + ",".join(map(str, points)), output)
             yield pattern, points
+
+
+class Sql:
+    """SQL に関する処理をするクラス"""
+
+    @staticmethod
+    def init(dbname: str = OUT_DBNAME):
+        conn = sqlite3.connect(dbname)
+        cur = conn.cursor()
+        cur.execute(
+            "create table positions("
+            + "id integer primary key autoincrement, seq text unique)"
+        )
+        cur.execute(
+            "create table directions("
+            + "id integer primary key autoincrement, seq text unique)"
+        )
+        theme_cols = ["t" + str(i).zfill(2) for i in range(1, NUM_THEME + 1)]
+        cur.execute(
+            "create table points(id integer primary key autoincrement, "
+            + " integer, ".join(theme_cols) + " integer, unique ("
+            + ", ".join(theme_cols) + "))"
+        )
+        cur.execute("create table towns(\
+            id integer primary key autoincrement, \
+            pos_id integer, \
+            dir_id integer, \
+            scr_id integer, \
+            foreign key(pos_id) references positions(id), \
+            foreign key(dir_id) references directions(id)\
+            foreign key(scr_id) references points(id)\
+            )")
+        cur.close()
+        conn.close()
+
+    @staticmethod
+    def register(cur: sqlite3.Cursor, pattern: str, points: List[int] = None):
+        # TODO: 町のパターンとスコアを投げて DB に登録する
+        pass

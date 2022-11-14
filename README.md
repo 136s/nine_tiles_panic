@@ -1,8 +1,6 @@
 # nine_tiles_panic
 
-This program shearch the best towns for [Nine Tiles Panic](https://oinkgames.com/en/games/analog/nine-tiles-panic/) (Oink Games, 2019) by brute-force.
-
-This program reproduces the tiles on the code and explores towns as if players actually create towns on a table.
+This program shearches the best towns for the [Nine Tiles Panic](https://oinkgames.com/en/games/analog/nine-tiles-panic/) (Oink Games, 2019) by brute-force.
 
 ## Installation
 
@@ -22,7 +20,7 @@ To search all possible town and calculate those towns' point, run
 python -m nine_tiles_panic
 ```
 
-then `success_pattern.txt` which contians town pattern and point.
+then `success_pattern.txt` which contians town pattern and point is created.
 
 To check the face of a town, run
 
@@ -37,9 +35,11 @@ then get bellow image.
 
 This town can be seen at the [official site](https://oinkgames.com/images/description/nine-tiles-panic/image02.jpg).
 
-## Class
+## Classes
 
 ### TileFace
+
+`TileFace` class has roads and number of tile objects.
 
 ### Tile
 
@@ -50,6 +50,8 @@ This town can be seen at the [official site](https://oinkgames.com/images/descri
 ### Path
 
 ### Agent, Alien, Hamburger
+
+### View
 
 ## Search algorithm
 
