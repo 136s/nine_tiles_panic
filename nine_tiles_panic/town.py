@@ -15,6 +15,7 @@ from tile import Road, TileFace, Tile
 
 LEN_SIDE = config.LEN_SIDE
 NUM_TILE = config.NUM_TILE
+NUM_THEME = config.NUM_THEME
 
 
 class Path:
@@ -680,7 +681,7 @@ class Town:
             "女の子の数が多い",
             "男の子の数が多い",
         ]
-        for theme in range(26):
+        for theme in range(NUM_THEME):
             points.append(self.theme_point(theme + 1))
         if is_print:
             for i, point in enumerate(points):

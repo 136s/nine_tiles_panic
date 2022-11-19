@@ -438,7 +438,9 @@ class Search:
                 yield pattern
 
     @staticmethod
-    def search_point(output: str = None):
+    def search_point(
+        output: str = None,
+    ) -> Generator[Tuple[str, List[int]], None, None]:
         """生成可能な町を取得してお題ごとの点数リストを返す"""
         for pattern in Search.search_town():
             points = Town(pattern).get_theme_point()
@@ -453,7 +455,7 @@ class Sql:
     theme_cols = ["t" + str(i).zfill(2) for i in range(1, NUM_THEME + 1)]
 
     @staticmethod
-    def init(dbname: str = OUT_DBNAME):
+    def init(dbname: str = OUT_DBNAME) -> None:
         conn = sqlite3.connect(dbname)
         cur = conn.cursor()
         cur.execute(
@@ -548,18 +550,47 @@ class Sql:
         return id
 
     @staticmethod
-    def register_town(cur: sqlite3.Cursor, pattern: str, pnt: List[int]) -> Tuple[int]:
+    def register_town(cur: sqlite3.Cursor, pattern: str, pnt: List[int]) -> int:
         pos_id = Sql.register_table(cur, "positions", pattern[:NUM_TILE])
         dir_id = Sql.register_table(cur, "directions", pattern[NUM_TILE:])
         pnt_id = Sql.register_table(cur, "points", pnt)
-        twn_id = Sql.register_table(cur, "towns", [pos_id, dir_id, pnt_id])
-        return pos_id, dir_id, pnt_id, twn_id
+        twn_id = Sql.register_table(cur, "towns", [pos_id, dir_id, pnt_id], True)
+        return twn_id
 
-    @classmethod
-    def register(dbname: str = OUT_DBNAME):
+    @staticmethod
+    def register(
+        dbname: str = OUT_DBNAME, pattern_file: str = None, synonym_file: str = None
+    ) -> None:
+        if not os.path.exists(dbname):
+            Sql.init(dbname)
         conn = sqlite3.connect(dbname)
         cur = conn.cursor()
-        # TODO: 町のリストから点数を計算する
-        conn.commit()
-        cur.close()
-        conn.close()
+        try:
+            if pattern_file:
+                # 先にパターンファイル作ってる場合はそれを読んで記録
+                with open(pattern_file) as f:
+                    for line in f:
+                        pattern = line.split("\n")[0]
+                        points = Town(pattern).get_theme_point()
+                        Sql.register_town(cur, pattern, points)
+            elif synonym_file:
+                # 先に道シノニムのファイル作ってる場合はそれを読んで記録
+                with open(synonym_file) as f:
+                    for line in f:
+                        pattern_synonym = line.split("\n")[0]
+                        for pattern in Search.convert_synonym_original(pattern_synonym):
+                            points = Town(pattern).get_theme_point()
+                            id = Sql.register_town(cur, pattern, points)
+                        if id == 10:
+                            break
+            else:
+                # パターンファイルがない場合は探索から実行して記録
+                for pattern, points in Search.search_point():
+                    Sql.register_town(cur, pattern, points)
+        except:  # noqa: E722
+            print("町・得点の記録においてエラーが発生しました")
+        finally:
+            conn.commit()
+            cur.close()
+            conn.close()
+            print("町・得点の記録は終了しました")
