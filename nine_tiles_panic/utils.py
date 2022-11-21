@@ -98,7 +98,7 @@ class View:
         return (coodinate[0] - 3 * len, coodinate[1] - 6.5)
 
     def real_image(tile: int, is_front: bool) -> str:
-        return "./data/imgs/tf{}{}.png".format(tile, is_front)
+        return "nine_tiles_panic/data/imgs/tf{}{}.png".format(tile, is_front)
 
     def _set_drawer(self) -> None:
         self.drawer = ImageDraw.Draw(self.image)
