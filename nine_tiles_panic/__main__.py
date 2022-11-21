@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from utils import Sql
+from nine_tiles_panic.utils import Sql
 
 
 if __name__ == "__main__":

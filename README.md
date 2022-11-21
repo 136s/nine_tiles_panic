@@ -8,7 +8,6 @@ This program shearches the best towns for the [Nine Tiles Panic](https://oinkgam
 git clone https://github.com/136s/nine_tiles_panic.git
 cd nine_tiles_panic
 conda env create --file requirements.yaml
-cd nine_tiles_panic
 conda activate ntp
 ```
 
@@ -25,7 +24,7 @@ then `success_pattern.txt` which contians town pattern and point is created.
 To check the face of a town, run
 
 ```python
-from utils import View
+from nine_tiles_panic.utils import View
 View("206745813361230035").draw()
 ```
 

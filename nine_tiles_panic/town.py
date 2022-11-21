@@ -9,9 +9,9 @@ from typing import Dict, Generator, List, Union
 import networkx as nx
 from networkx.utils import pairwise
 
-import config
-from onroad import Agent, Alien, Hamburger
-from tile import Road, TileFace, Tile
+from nine_tiles_panic import config
+from nine_tiles_panic.onroad import Agent, Alien, Hamburger
+from nine_tiles_panic.tile import Road, TileFace, Tile
 
 LEN_SIDE = config.LEN_SIDE
 NUM_TILE = config.NUM_TILE
