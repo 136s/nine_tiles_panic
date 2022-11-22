@@ -10,8 +10,8 @@ from typing import Generator, List, Tuple, Union
 from PIL import Image, ImageDraw
 
 from nine_tiles_panic import config
-from nine_tiles_panic.tile import TileFace, Tile
-from nine_tiles_panic.town import Town
+from nine_tiles_panic import TileFace, Tile
+from nine_tiles_panic import Town
 
 LEN_SIDE = config.LEN_SIDE
 NUM_TILE = config.NUM_TILE

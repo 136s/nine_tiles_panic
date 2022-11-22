@@ -10,8 +10,8 @@ import networkx as nx
 from networkx.utils import pairwise
 
 from nine_tiles_panic import config
-from nine_tiles_panic.onroad import Agent, Alien, Hamburger
-from nine_tiles_panic.tile import Road, TileFace, Tile
+from nine_tiles_panic import Agent, Alien, Hamburger
+from nine_tiles_panic import Road, TileFace, Tile
 
 LEN_SIDE = config.LEN_SIDE
 NUM_TILE = config.NUM_TILE

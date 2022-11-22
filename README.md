@@ -24,7 +24,7 @@ then `success_pattern.txt` which contians town pattern and point is created.
 To check the face of a town, run
 
 ```python
-from nine_tiles_panic.utils import View
+from nine_tiles_panic import View
 View("206745813361230035").draw()
 ```
 

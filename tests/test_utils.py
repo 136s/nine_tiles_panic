@@ -8,9 +8,9 @@ import unittest
 import numpy as np
 from PIL import Image
 
-from nine_tiles_panic.tile import Tile
-from nine_tiles_panic.town import Town
-from nine_tiles_panic.utils import Search, View
+from nine_tiles_panic import Tile
+from nine_tiles_panic import Town
+from nine_tiles_panic import Search, View
 
 EXPECTED_DIR = "./tests/expected/"
 TEMP_DIR = "./test_temp/"
