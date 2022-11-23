@@ -9,7 +9,7 @@ setup(
     description="Find the best town for Nine Tiles Panic by brute force.",
     url="https://github.com/136s/nine_tiles_panic",
     packages=find_packages(exclude=("tests", "docs")),
-    package_data={"data/imgs": ["*.png"]},
+    package_data={"": ["*.png"]},
     install_requires=["networkx", "numpy", "pillow"],
     python_requires=">=3.9.12",
 )
