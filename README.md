@@ -5,10 +5,7 @@ This program shearches the best towns for the [Nine Tiles Panic](https://oinkgam
 ## Installation
 
 ```bash
-git clone https://github.com/136s/nine_tiles_panic.git
-cd nine_tiles_panic
-conda env create --file requirements.yaml
-conda activate ntp
+pip install git+https://github.com/136s/nine_tiles_panic.git
 ```
 
 ## Usage
@@ -19,7 +16,7 @@ To search all possible town and calculate those towns' point, run
 python -m nine_tiles_panic
 ```
 
-then `success_pattern.txt` which contians town pattern and point is created.
+then `success_pattern.db` which contians town pattern and point is created.
 
 To check the face of a town, run
 
