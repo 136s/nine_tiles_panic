@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from importlib import resources
 import itertools
 import math
 import os
@@ -12,6 +13,7 @@ from PIL import Image, ImageDraw
 from nine_tiles_panic import config
 from nine_tiles_panic import TileFace, Tile
 from nine_tiles_panic import Town
+import nine_tiles_panic.data.imgs as realimg
 
 LEN_SIDE = config.LEN_SIDE
 NUM_TILE = config.NUM_TILE
@@ -97,8 +99,8 @@ class View:
     def char_adj(coodinate: Tuple[float], len: int = 2) -> Tuple[float]:
         return (coodinate[0] - 3 * len, coodinate[1] - 6.5)
 
-    def real_image(tile: int, is_front: bool) -> str:
-        return "nine_tiles_panic/data/imgs/tf{}{}.png".format(tile, is_front)
+    def real_image(tile: int, is_back: int) -> str:
+        return resources.files(realimg).joinpath("tf{}{}.png".format(tile, is_back))
 
     def _set_drawer(self) -> None:
         self.drawer = ImageDraw.Draw(self.image)
@@ -225,9 +227,9 @@ class View:
     def _draw_real_tile_face(self) -> None:
         """タイル面を描画"""
         tile, direction = self.object
-        is_front = str(1 - int(int(direction) < 4))
+        is_back = 1 - (int(direction) < 4)
         angle = int(direction) % 4
-        self.image = Image.open(View.real_image(tile, is_front)).rotate(angle * 90)
+        self.image = Image.open(View.real_image(tile, is_back)).rotate(angle * 90)
 
     def _draw_real_town(self) -> None:
         """町を描画"""
