@@ -596,3 +596,28 @@ class Sql:
             cur.close()
             conn.close()
             print("町・得点の記録は終了しました")
+
+    @staticmethod
+    def select_town(town_id: int, dbname: str = OUT_DBNAME) -> Tuple[str, Tuple[int]]:
+        conn = sqlite3.connect(dbname)
+        cur = conn.cursor()
+        try:
+            _, pos_id, dir_id, pnt_id = cur.execute(
+                "select * from towns where id = " + str(town_id)
+            ).fetchone()
+            pos = cur.execute(
+                "select seq from positions where id = " + str(pos_id)
+            ).fetchone()[0]
+            dir = cur.execute(
+                "select seq from directions where id = " + str(dir_id)
+            ).fetchone()[0]
+            points = cur.execute(
+                "select * from points where id = " + str(pnt_id)
+            ).fetchone()[1:]
+            pattern = pos.zfill(NUM_TILE) + dir.zfill(NUM_TILE)
+        except:  # noqa: E722
+            print("町・得点の取得においてエラーが発生しました")
+        finally:
+            cur.close()
+            conn.close()
+        return pattern, points
