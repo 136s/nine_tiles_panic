@@ -362,7 +362,7 @@ class Search:
                         yield pattern
 
     @staticmethod
-    def convert_synonym_original(pattern_synonym: str):
+    def convert_synonym_original(pattern_synonym: str) -> Generator[str]:
         """町シノニムのパターンから、original の町のパターンに変換
 
         5 種類の道を重複ありで順列を生成し、既定の枚数以下の場合に
@@ -431,12 +431,12 @@ class Search:
                 yield position + direction
 
     @staticmethod
-    def search_town(output: str = None, synonym_output: str = None):
+    def search_town(output: str = None, synonym_output: str = None) -> Generator[str]:
         """シノニムで町の生成可能性を確認して全ての町を探索する"""
         for pattern_synonym in Search.search_synonym(synonym_output):
             for pattern in Search.convert_synonym_original(pattern_synonym):
                 if output is not None:
-                    Search(pattern, output)
+                    Search.write(pattern, output)
                 yield pattern
 
     @staticmethod
@@ -449,6 +449,32 @@ class Search:
             if output is not None:
                 Search.write(pattern + "," + ",".join(map(str, points)), output)
             yield pattern, points
+
+    @staticmethod
+    def search_point_2step(
+        output: str = None, synonym_output: str = None
+    ) -> Generator[Tuple[str, List[int]], None, None]:
+        """生成可能な町を取得してお題ごとの点数リストを返す（シノニムでも計算）"""
+
+        synonym_themes = [4, 5, 6, 10, 11, 13, 15]  # 道の形状で計算できるお題
+        tile_themes = [3, 7, 9, 12, 21, 22, 23, 24, 25, 26]  # タイル面で計算できるお題
+        road_themes = [1, 2, 8, 14, 16, 17, 18, 19, 20]  # pattern ごとに計算するお題
+
+        for pattern_synonym in Search.search_synonym(synonym_output):
+            points = [0] * NUM_THEME
+            synonym_town = Town(pattern_synonym)
+            for theme in synonym_themes:
+                points[theme - 1] = synonym_town.theme_point(theme)
+            for pattern in Search.convert_synonym_original(pattern_synonym):
+                town = Town(pattern)
+                for theme in tile_themes:
+                    # TODO: タイル面が不変かどうか判定して計算を分ける
+                    points[theme - 1] = town.theme_point(theme)
+                for theme in road_themes:
+                    points[theme - 1] = town.theme_point(theme)
+                if output is not None:
+                    Search.write(pattern + "," + ",".join(map(str, points)), output)
+                yield pattern, points
 
 
 class Sql:
@@ -582,9 +608,7 @@ class Sql:
                         pattern_synonym = line.split("\n")[0]
                         for pattern in Search.convert_synonym_original(pattern_synonym):
                             points = Town(pattern).get_theme_point()
-                            id = Sql.register_town(cur, pattern, points)
-                        if id == 10:
-                            break
+                            Sql.register_town(cur, pattern, points)
             else:
                 # パターンファイルがない場合は探索から実行して記録
                 for pattern, points in Search.search_point():

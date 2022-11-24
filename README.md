@@ -25,7 +25,7 @@ from nine_tiles_panic import View
 View("206745813361230035").draw()
 ```
 
-then get bellow image.
+then get below image.
 
 ![town of 206745813361230035](./docs/imgs/town_206745813361230035.png)
 
@@ -102,7 +102,7 @@ The 0-th position is #2 tile.
 |
 206745813361230035
          |
-         The #2 tile is front face which rotates 270 dwgree.
+         The #2 tile is front face which rotates 270 degree.
 ```
 
 ### Path
@@ -116,13 +116,13 @@ The 0-th position is #2 tile.
 The path edge is:
 
 ``` text
-+--00-+04-+08--+
-|01  03  07  11|
-+--02-+06-+10--+
-|13  15  19  23|
-+--14-+18-+22--+
-|25  27  31  35|
-+--26-+30-+34--+
++-0-+--4-+-8-+
+1   3    7  11
++-2-+--6-+10-+
+13  15  19  23
++-14+-18-+22-+
+25  27  31  35
++-26+-30-+34-+
 ```
 
 Difference between `Road` and `Path`:
@@ -146,6 +146,27 @@ If the input is `string`, draw real image by the string.
 
 ## Search algorithm
 
+### A. Search all pattern
+
+Pattern combinations: $9!\times8^9 = 48{,}704{,}929{,}136{,}640$
+
+```python
+from nine_tiles_panic import Search, Town
+for pattern in Search.search_all():
+    points = Town(pattern).get_theme_point()
+    print(pattern, points)
+```
+
+### B. Search by road synonym
+
+Synonym pattern combinations: [$254{,}088$](./tests/expected/synonym_pattern.txt)
+
+```python
+from nine_tiles_panic import Search
+for pattern, points in Search.search_point():
+    print(pattern, points)
+```
+
 Concept:
 
 ```mermaid
@@ -155,4 +176,24 @@ A[Road synonym tile]
 --> | Yes | C[Convert to\n original tiles]
 --> D{Follow the tile\n constraints?} 
 --> | Yes | E[Calculate point]
+```
+
+### C. Search by road synonym and calculate points at each steps
+
+```python
+from nine_tiles_panic import Search
+for pattern, points in Search.search_point_2step():
+    print(pattern, points)
+```
+
+Concept:
+
+```mermaid
+flowchart LR
+A[Road synonym tile] 
+--> B{Can complete\n a town?} 
+--> | Yes | C[Calculate\n town synonym point]
+--> D[Convert to\n original tiles]
+--> E{Follow the tile\n constraints?} 
+--> | Yes | F[Calculate point]
 ```
