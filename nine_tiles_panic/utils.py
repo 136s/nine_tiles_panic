@@ -464,7 +464,7 @@ class Search:
 
         for pattern_synonym in Search.search_synonym(synonym_output):
             points = [0] * NUM_THEME
-            synonym_town = Town(pattern_synonym)
+            synonym_town = Town(pattern_synonym, Tile.get_synonym())
             for theme in synonym_themes:
                 points[theme - 1] = synonym_town.theme_point(theme)
             for pattern in Search.convert_synonym_original(pattern_synonym):
