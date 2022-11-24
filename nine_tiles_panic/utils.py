@@ -362,7 +362,7 @@ class Search:
                         yield pattern
 
     @staticmethod
-    def convert_synonym_original(pattern_synonym: str) -> Generator[str]:
+    def convert_synonym_original(pattern_synonym: str) -> Generator[str, None, None]:
         """町シノニムのパターンから、original の町のパターンに変換
 
         5 種類の道を重複ありで順列を生成し、既定の枚数以下の場合に
@@ -431,7 +431,9 @@ class Search:
                 yield position + direction
 
     @staticmethod
-    def search_town(output: str = None, synonym_output: str = None) -> Generator[str]:
+    def search_town(
+        output: str = None, synonym_output: str = None
+    ) -> Generator[str, None, None]:
         """シノニムで町の生成可能性を確認して全ての町を探索する"""
         for pattern_synonym in Search.search_synonym(synonym_output):
             for pattern in Search.convert_synonym_original(pattern_synonym):
