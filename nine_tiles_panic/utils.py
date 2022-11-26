@@ -256,6 +256,14 @@ class View:
 class Search:
     """探索系の関数を持つクラス"""
 
+    # 町を回転させたときの position の対応表
+    position_lookup = [
+        [0, 1, 2, 3, 4, 5, 6, 7, 8],
+        [2, 5, 8, 1, 4, 7, 0, 3, 6],
+        [8, 7, 6, 5, 4, 3, 2, 1, 0],
+        [6, 3, 0, 7, 4, 1, 8, 5, 2],
+    ]
+
     # 文字列 s のインデックス n の文字を c に置換する関数
     replace = staticmethod(lambda s, n, c: s[:n] + str(c) + s[n + 1 :])
 
@@ -265,6 +273,42 @@ class Search:
         + str(((int(s[n]) // 4 + int(a) // 4) % 2) * 4 + (int(s[n]) % 4 + int(a)) % 4)
         + s[n + 1 :]
     )
+
+    @staticmethod
+    def rotate_synonym_tile(tile_pat: str, angle: int) -> str:
+        """道シノニムのタイルを方向付き 2 桁で入れて回転させる"""
+        tile = tile_pat[0]
+        dir = int(tile_pat[1])
+        if tile in ("0", "4"):
+            rot_pat = tile_pat
+        elif tile == "1":
+            rot_pat = tile + str((dir + angle) % 4)
+        elif tile in ("2", "3"):
+            rot_pat = tile + str((dir + angle) % 2)
+        else:
+            raise NotImplementedError("道シノニムを入力してください")
+        return rot_pat
+
+    @staticmethod
+    def rotate_synonym_town(pattern: str, angle: int) -> str:
+        """町シノニムを回転させる"""
+        if angle != 0:
+            tiles = [pattern[i] + pattern[i + NUM_TILE] for i in range(NUM_TILE)]
+            r_tiles = [Search.rotate_synonym_tile(tile, angle) for tile in tiles]
+            r_tiles_remap = [r_tiles[p] for p in Search.position_lookup[angle]]
+            r_pattern = "".join([s[0] for s in r_tiles_remap]) + "".join(
+                [s[1] for s in r_tiles_remap]
+            )
+        else:
+            r_pattern = pattern
+        return r_pattern
+
+    @staticmethod
+    def first_synonym_town(pattern: str) -> str:
+        """町シノニムの回転町の中で最小の町を取得する"""
+        return str(
+            min([int(Search.rotate_synonym_town(pattern, angle)) for angle in range(4)])
+        ).zfill(NUM_TILE * 2)
 
     @staticmethod
     def write(text: str = "", output: str = OUT_FILENAME) -> None:
@@ -355,11 +399,14 @@ class Search:
                     pattern = position_synonym + direction_synonym
                     town = Town(pattern, tiles_synonym)
 
-                    # 道が繋がれば出力
                     if not town.has_failed():
-                        if output is not None:
-                            Search.write(pattern, output)
-                        yield pattern
+                        # 道が繋がれば、町ごと回転
+                        first_synonym = Search.first_synonym_town(pattern)
+                        if pattern == first_synonym:
+                            # 回転町の中で辞書順で最初であれば出力
+                            if output is not None:
+                                Search.write(pattern, output)
+                            yield pattern
 
     @staticmethod
     def convert_synonym_original(pattern_synonym: str) -> Generator[str, None, None]:

@@ -159,7 +159,19 @@ for pattern in Search.search_all():
 
 ### B. Search by road synonym
 
-Synonym pattern combinations: [$254{,}088$](./tests/expected/synonym_pattern.txt)
+Synonym pattern combinations: $63{,}660$ ([pattern list (1.2 MiB)](./tests/expected/synonym_pattern.txt))
+
+```python
+from nine_tiles_panic import config, Search, Town
+for _ in Search.search_synonym(config.OUT_FILENAME):
+    # The text file of synonym pattern combinations is generated.
+    pass
+for pattern in Search.convert_synonym_original(config.OUT_FILENAME):
+    points = Town(pattern).get_theme_point()
+    print(pattern, points)
+```
+
+or
 
 ```python
 from nine_tiles_panic import Search
