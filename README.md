@@ -163,10 +163,10 @@ Synonym pattern combinations: $63{,}660$ ([pattern list (1.2 MiB)](./tests/expec
 
 ```python
 from nine_tiles_panic import config, Search, Town
-for _ in Search.search_synonym(config.OUT_FILENAME):
-    # The text file of synonym pattern combinations is generated.
+for _ in Search.search_synonym("synonym_pattern.txt"):
+    # The text file of synonym patterns will be generated.
     pass
-for pattern in Search.convert_synonym_original(config.OUT_FILENAME):
+for pattern in Search.convert_synonym_original("synonym_pattern.txt"):
     points = Town(pattern).get_theme_point()
     print(pattern, points)
 ```
