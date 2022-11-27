@@ -212,3 +212,10 @@ A[Road synonym tile]
 --> E{Follow the tile\n constraints?} 
 --> | Yes | F[Calculate point]
 ```
+
+## License
+
+- Original game: (C) 2019 Oink Games Inc.
+  - Game Design: Jean-Claude Pellin, Jens Merkl
+  - Artwork: Hiroko Izumida, Jun Sasaki
+- The source code except game design and artwork: [MIT License](LICENSE)
