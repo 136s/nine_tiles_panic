@@ -426,32 +426,33 @@ class Search:
         # ; の後ろは alien, agent, humberger を考慮して除外した同じ得点になる置き方
         synonym_original_ref = {
             # 道無し, 1 回転; 01, 02, 03, 31, 32, 33, 55, 56, 57
-            0: ["00", "30", "54"],
+            0: [["00"], ["30"], ["54"]],
             # 1 曲線, 4 回転
-            1: ["10", "26", "50", "80"],
+            1: [["10"], ["26"], ["50"], ["80"]],
             # 2 曲線, 2 回転
-            2: ["04", "06", "21", "23", "41", "43", "71", "73"],
+            2: [["04", "06"], ["21", "23"], ["41", "43"], ["71", "73"]],
             # 1 直線, 2 回転; 36, 86
-            3: ["34", "64", "66", "74", "76", "84"],
+            3: [["34"], ["64", "66"], ["74", "76"], ["84"]],
             # 2 直線, 1 回転; 46, 47
-            4: ["14", "15", "16", "17", "44", "45", "60", "61", "62", "63"],
+            4: [["14", "15", "16", "17"], ["44", "45"], ["60", "61", "62", "63"]],
         }
         num_synonym = len(synonym_original_ref)
         position_synonym = pattern_synonym[:NUM_TILE]
         direction_synonym = pattern_synonym[NUM_TILE:]
 
         # 各タイルのいるインデックスを格納
-        indices = []
-        for i in range(num_synonym):
-            indices.append([c.start() for c in re.finditer(str(i), position_synonym)])
+        indices = [[] for _ in range(num_synonym)]
+        for i, p in enumerate(position_synonym):
+            indices[int(p)].append(i)
 
         # 同じ町シノニムになり得るタイルの組合せを全て格納
         tilefaces = [[] for _ in range(num_synonym)]
         for i in range(num_synonym):
-            for tileface in itertools.permutations(
+            for tileface_groups in itertools.permutations(
                 synonym_original_ref.get(i), position_synonym.count(str(i))
             ):
-                tilefaces[i].append(tileface)
+                for tileface in itertools.product(*tileface_groups):
+                    tilefaces[i].append(tileface)
 
         # タイルのあり得る組合せを全て探索
         for tileface_set in itertools.product(*tilefaces):

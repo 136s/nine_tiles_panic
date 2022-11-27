@@ -43,7 +43,7 @@ class TestSearch(unittest.TestCase):
     def test_convert_synonym_original(self) -> None:
         print("町シノニムからオリジナルタイルに変換します（約 1 分間）")
         pattern_synonym = "224221113000100031"
-        temp_file = "town_points_{}.txt".format(pattern_synonym)
+        temp_file = os.path.join(TEMP_DIR, "town_points_{}.txt".format(pattern_synonym))
         for pattern in Search.convert_synonym_original(pattern_synonym):
             points = Town(pattern).get_theme_point()
             Search.write(pattern + str(points), temp_file)
