@@ -41,13 +41,14 @@ class TestSearch(unittest.TestCase):
         os.makedirs(TEMP_DIR, exist_ok=True)
 
     def test_convert_synonym_original(self) -> None:
-        print("町シノニムからオリジナルタイルに変換します（約 1 分間）")
+        print("町シノニムからオリジナルタイルに変換します（約 30 秒間）")
         pattern_synonym = "224221113000100031"
-        temp_file = os.path.join(TEMP_DIR, "town_points_{}.txt".format(pattern_synonym))
+        filename = "town_points_{}.txt".format(pattern_synonym)
+        temp_file = os.path.join(TEMP_DIR, filename)
         for pattern in Search.convert_synonym_original(pattern_synonym):
             points = Town(pattern).get_theme_point()
             Search.write(pattern + str(points), temp_file)
-        self.assertTrue(filecmp.cmp(temp_file, EXPECTED_DIR + temp_file, shallow=False))
+        self.assertTrue(filecmp.cmp(temp_file, EXPECTED_DIR + filename, shallow=False))
 
     @unittest.skip("needs long time")
     def test_search_synonym(self) -> None:

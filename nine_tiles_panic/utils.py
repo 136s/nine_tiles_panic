@@ -456,26 +456,18 @@ class Search:
 
         # タイルのあり得る組合せを全て探索
         for tileface_set in itertools.product(*tilefaces):
-            position = position_synonym
-            direction = direction_synonym
-            for i in range(len(tileface_set)):
-                for j in range(len(tileface_set[i])):
-                    position = Search.replace(
-                        position, indices[i][j], tileface_set[i][j][0]
-                    )
-                    direction = Search.rotate(
-                        direction, indices[i][j], tileface_set[i][j][1]
-                    )
-
-            # 各タイル 1 枚ずつかどうか確認
-            no_dup_tile = True
-            for i in range(NUM_TILE):
-                if position.count(str(i)) != 1:
-                    no_dup_tile = False
-                    break
-
-            # 1 枚ずつであれば出力
-            if no_dup_tile:
+            # 使われてるタイルが 9 種類なら進む
+            if len(set([t[0] for ts in tileface_set for t in ts])) == NUM_TILE:
+                position = position_synonym
+                direction = direction_synonym
+                for i in range(len(tileface_set)):
+                    for j in range(len(tileface_set[i])):
+                        position = Search.replace(
+                            position, indices[i][j], tileface_set[i][j][0]
+                        )
+                        direction = Search.rotate(
+                            direction, indices[i][j], tileface_set[i][j][1]
+                        )
                 yield position + direction
 
     @staticmethod
