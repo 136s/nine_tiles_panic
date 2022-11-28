@@ -505,13 +505,21 @@ class Search:
         for pattern_synonym in Search.search_synonym(synonym_output):
             points = [0] * NUM_THEME
             synonym_town = Town(pattern_synonym, Tile.get_synonym())
+            # 道から点数計算
             for theme in synonym_themes:
                 points[theme - 1] = synonym_town.theme_point(theme)
+            previous_position = ""
             for pattern in Search.convert_synonym_original(pattern_synonym):
                 town = Town(pattern)
-                for theme in tile_themes:
-                    # TODO: タイル面が不変かどうか判定して計算を分ける
-                    points[theme - 1] = town.theme_point(theme)
+                # 面から点数計算
+                if (position := pattern[:NUM_TILE]) != previous_position:
+                    # タイル面が変わった時のみ計算する
+                    # 厳密には direction の方も確認が必要だが、
+                    # この順番の探索では pattern がひとつ前と同じなのに
+                    # position が不変のことはないので問題ない
+                    for theme in tile_themes:
+                        points[theme - 1] = town.theme_point(theme)
+                    previous_position = position
                 for theme in road_themes:
                     points[theme - 1] = town.theme_point(theme)
                 if output is not None:
