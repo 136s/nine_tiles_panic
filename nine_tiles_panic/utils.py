@@ -487,7 +487,7 @@ class Search:
     ) -> Generator[Tuple[str, List[int]], None, None]:
         """生成可能な町を取得してお題ごとの点数リストを返す"""
         for pattern in Search.search_town():
-            points = Town(pattern).get_theme_point()
+            points = Town(pattern, is_completable=True).get_theme_point()
             if output is not None:
                 Search.write(pattern + "," + ",".join(map(str, points)), output)
             yield pattern, points
@@ -510,7 +510,7 @@ class Search:
                 points[theme - 1] = synonym_town.theme_point(theme)
             previous_position = ""
             for pattern in Search.convert_synonym_original(pattern_synonym):
-                town = Town(pattern)
+                town = Town(pattern, is_completable=True)
                 # 面から点数計算
                 if (position := pattern[:NUM_TILE]) != previous_position:
                     # タイル面が変わった時のみ計算する

@@ -126,7 +126,7 @@ class Path:
 
 
 class Town:
-    """ Town クラス
+    """Town クラス
 
     町のクラス
     Tile の position は以下の通り
@@ -143,11 +143,9 @@ class Town:
           26  30  34
 
     Attributes:
-        left_end (int): Path の始点（左端）
-        right_end (int): Path の終点（右端）
-        length (int): タイル1枚を長さ1として数えたときの道の長さ
-        objects (List[Union[Agent, Alien, Hamburger]]): 始点から終点までの\
-            道上のエージェント・宇宙人・ハンバーガーのリスト
+        pattern (str): 町のパターン文字列（18 桁）
+        tiles (List[Tile]): 町の構成に使うタイルセット
+        is_completable (bool): 町が作成可能という事前情報のフラグ（計算量削減のため）
     """
 
     # 町の外周の Path の辺の番号
@@ -155,10 +153,16 @@ class Town:
     # 町の外周以外の Path の辺の番号
     INNER_EDGES = [3, 7, 2, 6, 10, 15, 19, 14, 18, 22, 27, 31]
 
-    def __init__(self, pattern: str = None, tiles: list = None) -> None:
+    def __init__(
+        self,
+        pattern: str = None,
+        tiles: List[Tile] = Tile.get_original(),
+        is_completable: bool = False,
+    ) -> None:
         self.face: List[TileFace] = [None] * NUM_TILE
         self.making_failed: bool = False
         self.paths: List[Path] = []
+        self.is_completable = is_completable
         if pattern is not None:
             self.make(pattern, tiles)
 
@@ -174,7 +178,8 @@ class Town:
         has_added = False
         adding_face = tile.get_face(is_front, angle)
         if self.get_face(position) is None:
-            if self.can_add_tile(position, adding_face):
+            if self.is_completable or self.can_add_tile(position, adding_face):
+                # 事前に隣接タイルと繋がることが分かっているか、確認出来たらタイルを置く
                 self.face[position] = adding_face
                 has_added = True
         if not has_added:
@@ -316,20 +321,23 @@ class Town:
         )
         return len(max(nx.connected_components(posgraph.subgraph(positions)), key=len))
 
-    def make(self, pattern: str = "", tiles: list = None) -> None:
+    def make(
+        self,
+        pattern: str = "",
+        tiles: List[Tile] = Tile.get_original(),
+    ) -> None:
         """前 9 桁: 置くタイルの index、後 9 桁: 置き方（0-3: 表で角度、4-7: 裏で角度 +4）"""
         if len(pattern) == NUM_TILE * 2:
-            if tiles is None:
-                tiles = Tile.get_original()
-            pattern = pattern.zfill(2 * NUM_TILE)
             for i in range(NUM_TILE):
                 position = i
                 tile = tiles[int(pattern[i])]
                 is_front = int(pattern[i + NUM_TILE]) < 4
                 angle = int(pattern[i + NUM_TILE]) % 4
                 self.add_tile(position, tile, is_front, angle)
-                if self.has_failed():
-                    break
+                if not self.is_completable:
+                    # 事前に道が繋がることが分からない時のみ接続性を確認
+                    if self.has_failed():
+                        break
             if not self.has_failed():
                 self.__make_paths()  # 町としての道を作成し、閉路の有無も判定
         else:
