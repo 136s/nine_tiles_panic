@@ -1,0 +1,6 @@
+name: ntp
+dependencies:
+  - networkx=2.7.1
+  - numpy=1.22.3
+  - pillow=9.0.1
+  - python=3.9.12
