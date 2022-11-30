@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from importlib import resources
+import io
 import itertools
 import math
 import os
@@ -310,6 +311,7 @@ class Search:
             min([int(Search.rotate_synonym_town(pattern, angle)) for angle in range(4)])
         ).zfill(NUM_TILE * 2)
 
+    @DeprecationWarning
     @staticmethod
     def write(text: str = "", output: str = OUT_FILENAME) -> None:
         if os.path.exists(output):
@@ -320,8 +322,17 @@ class Search:
             f.write(text + "\n")
 
     @staticmethod
+    def text_io(output: str = OUT_FILENAME) -> io.TextIOWrapper:
+        if not os.path.exists(output):
+            f = open(output, mode="w")
+            f.close()
+        return open(output, mode="a")
+
+    @staticmethod
     def search_all(output: str = OUT_FILENAME) -> Generator[str, None, None]:
         """純粋に全探索（9! * 8^9 通り）"""
+        if output is not None:
+            f = Search.text_io(output)
         for i in itertools.permutations(range(NUM_TILE)):
             position = "".join(map(str, i))
             for j in range(8 ** (NUM_TILE)):
@@ -330,8 +341,10 @@ class Search:
                 town = Town(pattern)
                 if not town.has_failed():
                     if output is not None:
-                        Search.write(pattern, output)
+                        f.write(pattern)
                     yield pattern
+        if output is not None:
+            f.close()
 
     @staticmethod
     def search_synonym(
@@ -356,6 +369,8 @@ class Search:
 
         num_synonym = len(num_tiles)
         tiles_synonym = Tile.get_synonym()
+        if output is not None:
+            f = Search.text_io(output)
 
         # 道シノニムを要素とする重複順列を生成
         for permutation in itertools.product(range(num_synonym), repeat=NUM_TILE):
@@ -405,8 +420,10 @@ class Search:
                         if pattern == first_synonym:
                             # 回転町の中で辞書順で最初であれば出力
                             if output is not None:
-                                Search.write(pattern, output)
+                                f.write(pattern)
                             yield pattern
+        if output is not None:
+            f.close()
 
     @staticmethod
     def convert_synonym_original(pattern_synonym: str) -> Generator[str, None, None]:
@@ -475,22 +492,30 @@ class Search:
         output: str = None, synonym_output: str = None
     ) -> Generator[str, None, None]:
         """シノニムで町の生成可能性を確認して全ての町を探索する"""
+        if output is not None:
+            f = Search.text_io(output)
         for pattern_synonym in Search.search_synonym(synonym_output):
             for pattern in Search.convert_synonym_original(pattern_synonym):
                 if output is not None:
-                    Search.write(pattern, output)
+                    f.write(pattern)
                 yield pattern
+        if output is not None:
+            f.close()
 
     @staticmethod
     def search_point(
         output: str = None,
     ) -> Generator[Tuple[str, List[int]], None, None]:
         """生成可能な町を取得してお題ごとの点数リストを返す"""
+        if output is not None:
+            f = Search.text_io(output)
         for pattern in Search.search_town():
             points = Town(pattern, is_completable=True).get_theme_point()
             if output is not None:
-                Search.write(pattern + "," + ",".join(map(str, points)), output)
+                f.write(pattern + "," + ",".join(map(str, points)), output)
             yield pattern, points
+        if output is not None:
+            f.close()
 
     @staticmethod
     def search_point_2step(
@@ -501,6 +526,9 @@ class Search:
         synonym_themes = [4, 5, 6, 10, 11, 13, 15]  # 道の形状で計算できるお題
         tile_themes = [3, 7, 9, 12, 21, 22, 23, 24, 25, 26]  # タイル面で計算できるお題
         road_themes = [1, 2, 8, 14, 16, 17, 18, 19, 20]  # pattern ごとに計算するお題
+
+        if output is not None:
+            f = Search.text_io(output)
 
         for pattern_synonym in Search.search_synonym(synonym_output):
             points = [0] * NUM_THEME
@@ -523,8 +551,11 @@ class Search:
                 for theme in road_themes:
                     points[theme - 1] = town.theme_point(theme)
                 if output is not None:
-                    Search.write(pattern + "," + ",".join(map(str, points)), output)
+                    f.write(pattern + "," + ",".join(map(str, points)), output)
                 yield pattern, points
+
+        if output is not None:
+            f.close()
 
 
 class Sql:

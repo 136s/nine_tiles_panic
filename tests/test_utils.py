@@ -45,9 +45,10 @@ class TestSearch(unittest.TestCase):
         pattern_synonym = "224221113000100031"
         filename = "town_points_{}.txt".format(pattern_synonym)
         temp_file = os.path.join(TEMP_DIR, filename)
-        for pattern in Search.convert_synonym_original(pattern_synonym):
-            points = Town(pattern).get_theme_point()
-            Search.write(pattern + str(points), temp_file)
+        with Search.text_io(temp_file) as f:
+            for pattern in Search.convert_synonym_original(pattern_synonym):
+                points = Town(pattern).get_theme_point()
+                f.write(pattern + str(points) + "\n")
         self.assertTrue(filecmp.cmp(temp_file, EXPECTED_DIR + filename, shallow=False))
 
     @unittest.skip("needs long time")
