@@ -12,6 +12,7 @@ from nine_tiles_panic import Tile
 from nine_tiles_panic import Town
 from nine_tiles_panic import Search, View
 
+INPUT_DIR = "./tests/input/"
 EXPECTED_DIR = "./tests/expected/"
 TEMP_DIR = "./test_temp/"
 
@@ -60,6 +61,17 @@ class TestSearch(unittest.TestCase):
         self.assertTrue(
             filecmp.cmp(temp_file, EXPECTED_DIR + "synonym_pattern.txt", shallow=False)
         )
+
+    def test_search_point_from_pattern_file(self) -> None:
+        pattern_synonym = "000113123000121301"
+        filename = "town_points_{}.txt".format(pattern_synonym)
+        temp_file = os.path.join(TEMP_DIR, filename)
+        with Search.text_io(temp_file) as f:
+            for pattern, points in Search.search_point_from_pattern_file(
+                pattern_synonym, INPUT_DIR
+            ):
+                f.write(pattern + str(points) + "\n")
+        self.assertTrue(filecmp.cmp(temp_file, EXPECTED_DIR + filename, shallow=False))
 
     def tearDown(self) -> None:
         shutil.rmtree(TEMP_DIR)

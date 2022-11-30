@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import glob
 from importlib import resources
 import io
 import itertools
@@ -518,26 +519,72 @@ class Search:
             f.close()
 
     @staticmethod
-    def search_point_2step(
-        output: str = None, synonym_output: str = None
+    def search_point_from_synonym(
+        pattern_synonym: str,
     ) -> Generator[Tuple[str, List[int]], None, None]:
-        """生成可能な町を取得してお題ごとの点数リストを返す（シノニムでも計算）"""
+        """町シノニムからお題ごとの点数リストを返す（シノニムでも計算）"""
 
         synonym_themes = [4, 5, 6, 10, 11, 13, 15]  # 道の形状で計算できるお題
         tile_themes = [3, 7, 9, 12, 21, 22, 23, 24, 25, 26]  # タイル面で計算できるお題
         road_themes = [1, 2, 8, 14, 16, 17, 18, 19, 20]  # pattern ごとに計算するお題
 
+        points = [0] * NUM_THEME
+        synonym_town = Town(pattern_synonym, Tile.get_synonym())
+        # 道から点数計算
+        for theme in synonym_themes:
+            points[theme - 1] = synonym_town.theme_point(theme)
+        previous_position = ""
+        for pattern in Search.convert_synonym_original(pattern_synonym):
+            town = Town(pattern, is_completable=True)
+            # 面から点数計算
+            if (position := pattern[:NUM_TILE]) != previous_position:
+                # タイル面が変わった時のみ計算する
+                # 厳密には direction の方も確認が必要だが、
+                # この順番の探索では pattern がひとつ前と同じなのに
+                # position が不変のことはないので問題ない
+                for theme in tile_themes:
+                    points[theme - 1] = town.theme_point(theme)
+                previous_position = position
+            for theme in road_themes:
+                points[theme - 1] = town.theme_point(theme)
+            yield pattern, points
+
+    @staticmethod
+    def search_point_2(
+        output: str = None, synonym_output: str = None
+    ) -> Generator[Tuple[str, List[int]], None, None]:
+        """生成可能な町を取得してお題ごとの点数リストを返す（シノニムでも計算）"""
+
         if output is not None:
             f = Search.text_io(output)
-
         for pattern_synonym in Search.search_synonym(synonym_output):
-            points = [0] * NUM_THEME
-            synonym_town = Town(pattern_synonym, Tile.get_synonym())
-            # 道から点数計算
-            for theme in synonym_themes:
-                points[theme - 1] = synonym_town.theme_point(theme)
-            previous_position = ""
-            for pattern in Search.convert_synonym_original(pattern_synonym):
+            for pattern, points in Search.search_point_from_synonym(pattern_synonym):
+                if output is not None:
+                    f.write(pattern + "," + ",".join(map(str, points)), output)
+                yield pattern, points
+        if output is not None:
+            f.close()
+
+    @staticmethod
+    def search_point_from_pattern_file(
+        pattern_synonym: str, dir: str = ""
+    ) -> Generator[Tuple[str, List[int]], None, None]:
+        """道シノニムのファイル名の中に対応する町パターンが記録されているものを入力"""
+
+        synonym_themes = [4, 5, 6, 10, 11, 13, 15]  # 道の形状で計算できるお題
+        tile_themes = [3, 7, 9, 12, 21, 22, 23, 24, 25, 26]  # タイル面で計算できるお題
+        road_themes = [1, 2, 8, 14, 16, 17, 18, 19, 20]  # pattern ごとに計算するお題
+
+        points = [0] * NUM_THEME
+        synonym_town = Town(pattern_synonym, Tile.get_synonym())
+        # 道から点数計算
+        for theme in synonym_themes:
+            points[theme - 1] = synonym_town.theme_point(theme)
+        previous_position = ""
+        # パターンファイルから点数計算
+        with open(os.path.join(dir, pattern_synonym + ".txt")) as f:
+            for line in f:
+                pattern = line.split("\n")[0]
                 town = Town(pattern, is_completable=True)
                 # 面から点数計算
                 if (position := pattern[:NUM_TILE]) != previous_position:
@@ -550,12 +597,7 @@ class Search:
                     previous_position = position
                 for theme in road_themes:
                     points[theme - 1] = town.theme_point(theme)
-                if output is not None:
-                    f.write(pattern + "," + ",".join(map(str, points)), output)
                 yield pattern, points
-
-        if output is not None:
-            f.close()
 
 
 class Sql:
@@ -668,7 +710,10 @@ class Sql:
 
     @staticmethod
     def register(
-        dbname: str = OUT_DBNAME, pattern_file: str = None, synonym_file: str = None
+        dbname: str = OUT_DBNAME,
+        pattern_file: str = None,
+        synonym_file: str = None,
+        pattern_files_dir: str = None,
     ) -> None:
         if not os.path.exists(dbname):
             Sql.init(dbname)
@@ -687,12 +732,22 @@ class Sql:
                 with open(synonym_file) as f:
                     for line in f:
                         pattern_synonym = line.split("\n")[0]
-                        for pattern in Search.convert_synonym_original(pattern_synonym):
-                            points = Town(pattern).get_theme_point()
+                        for pattern, points in Search.search_point_from_synonym(
+                            pattern_synonym
+                        ):
                             Sql.register_town(cur, pattern, points)
+            elif pattern_files_dir:
+                # 道シノニム.txt にパターンが入ってる場合はそれを読んで記録
+                for pattern_file in glob.glob(os.path.join(pattern_files_dir, "*.txt")):
+                    print(os.path.basename(pattern_file).split(".", 1)[0])
+                    for pattern, points in Search.search_point_from_pattern_file(
+                        os.path.basename(pattern_file).split(".", 1)[0],
+                        pattern_files_dir,
+                    ):
+                        Sql.register_town(cur, pattern, points)
             else:
                 # パターンファイルがない場合は探索から実行して記録
-                for pattern, points in Search.search_point():
+                for pattern, points in Search.search_point_2():
                     Sql.register_town(cur, pattern, points)
         except:  # noqa: E722
             print("町・得点の記録においてエラーが発生しました")

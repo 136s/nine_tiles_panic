@@ -159,7 +159,7 @@ for pattern in Search.search_all():
 
 ### B. Search by road synonym
 
-Synonym pattern combinations: $63{,}660$ ([pattern list (1.2 MiB)](./tests/expected/synonym_pattern.txt))
+All unique synonym towns: 63,660 ([pattern list (1.2 MiB)](./tests/expected/synonym_pattern.txt))
 
 ```python
 from nine_tiles_panic import Search, Town
@@ -169,8 +169,7 @@ for _ in Search.search_synonym("synonym_pattern.txt"):
 with open("synonym_pattern.txt") as f:
     for line in f:
         pattern_synonym = line.split("\n")[0]
-        for pattern in Search.convert_synonym_original(pattern_synonym):
-            points = Town(pattern).get_theme_point()
+        for pattern, points in Search.search_point_from_synonym(pattern_synonym):
             print(pattern, points)
 ```
 
@@ -195,9 +194,32 @@ A[Road synonym tile]
 
 ### C. Search by road synonym and calculate points at each steps
 
+All unique towns: 526,070,976
+
+```python
+from nine_tiles_panic import Search, Town
+for _ in Search.search_synonym("synonym_pattern.txt"):
+    # The text file of synonym patterns will be generated.
+    pass
+with open("synonym_pattern.txt") as f:
+    for line in f:
+        pattern_synonym = line.split("\n")[0]
+        with Search.text_io("synonym_pattern/{}.txt".format(pattern_synonym)) as f:
+            for pattern in Search.convert_synonym_original(pattern_synonym):
+                _ = f.write(pattern + "\n")
+            # The text file of original patterns will be generated in `{pattern_synonym}.txt`.
+with open("synonym_pattern.txt") as f:
+    for line in f:
+        pattern_synonym = line.split("\n")[0]
+        for pattern, points in Search.search_point_from_pattern_file(pattern_synonym):
+            print(pattern, points)
+```
+
+or
+
 ```python
 from nine_tiles_panic import Search
-for pattern, points in Search.search_point_2step():
+for pattern, points in Search.search_point_2():
     print(pattern, points)
 ```
 
