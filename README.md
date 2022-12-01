@@ -1,6 +1,6 @@
 # nine_tiles_panic
 
-This program shearches the best towns for the [Nine Tiles Panic](https://oinkgames.com/en/games/analog/nine-tiles-panic/) (Oink Games, 2019) by brute-force.
+This program searches the best towns for the [Nine Tiles Panic](https://oinkgames.com/en/games/analog/nine-tiles-panic/) (Oink Games, 2019) by brute-force.
 
 ## Installation
 
