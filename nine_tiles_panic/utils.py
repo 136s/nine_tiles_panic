@@ -610,103 +610,23 @@ class Sql:
         conn = sqlite3.connect(dbname)
         cur = conn.cursor()
         cur.execute(
-            "create table positions("
-            + "id integer primary key autoincrement, seq text unique)"
-        )
-        cur.execute(
-            "create table directions("
-            + "id integer primary key autoincrement, seq text unique)"
-        )
-        cur.execute(
-            "create table points(id integer primary key autoincrement, "
-            + " integer, ".join(Sql.theme_cols)
-            + " integer, unique ("
-            + ", ".join(Sql.theme_cols)
-            + "))"
-        )
-        cur.execute(
             "create table towns(\
             id integer primary key autoincrement, \
-            pos_id integer, \
-            dir_id integer, \
-            pnt_id integer, \
-            foreign key(pos_id) references positions(id), \
-            foreign key(dir_id) references directions(id)\
-            foreign key(pnt_id) references points(id)\
-            )"
+            pos text, \
+            dir text, "
+            + " integer, ".join(Sql.theme_cols)
+            + " integer)"
         )
         cur.close()
         conn.close()
 
     @staticmethod
-    def register_table(
-        cur: sqlite3.Cursor,
-        table: str,
-        seq: Union[str, List[int]],
-        get_town_id: bool = False,
-    ) -> int:
-        # 町の位置・方向の文字列の登録
-        if table in ("positions", "directions"):
-            try:
-                cur.execute("insert into {}(seq) values({})".format(table, seq))
-                id = cur.execute("select count(*) from " + table).fetchone()[0]
-            except sqlite3.IntegrityError:
-                id = cur.execute(
-                    "select id from {} where seq={}".format(table, seq)
-                ).fetchone()[0]
-        # 町の点数の登録
-        elif table == "points":
-            try:
-                cur.execute(
-                    "insert into points({}) values({})".format(
-                        ",".join(Sql.theme_cols), ",".join(map(str, seq))
-                    )
-                )
-                id = cur.execute("select count(*) from " + table).fetchone()[0]
-            except sqlite3.IntegrityError:
-                id = cur.execute(
-                    "select id from points where "
-                    + " and ".join(
-                        [
-                            "t" + str(i + 1).zfill(2) + "=" + str(s)
-                            for i, s in enumerate(seq)
-                        ]
-                    )
-                ).fetchone()[0]
-        # 町の登録
-        elif table == "towns":
-            try:
-                cur.execute(
-                    "insert into towns(pos_id, dir_id, pnt_id) values({})".format(
-                        ",".join(map(str, seq))
-                    )
-                )
-                if get_town_id:
-                    id = cur.execute("select count(*) from " + table).fetchone()[0]
-            except sqlite3.IntegrityError:
-                if get_town_id:
-                    id = cur.execute(
-                        "select id from towns where ("
-                        + "pos_id={} and dir_id={} and pnt_id={})".format(
-                            seq[0], seq[1], seq[2]
-                        )
-                    ).fetchone()[0]
-            if not get_town_id:
-                id = 0
-        # 設定してない table はエラー
-        else:
-            raise NotImplementedError(
-                "DB table 名 は次の内のいずれかです: positions, directions, points, towns"
+    def register_town(cur: sqlite3.Cursor, pattern: str, pnt: List[int]) -> None:
+        cur.execute(
+            "insert into towns values(NULL, {}, {}, {})".format(
+                pattern[:NUM_TILE], pattern[NUM_TILE:], ", ".join(map(str, pnt))
             )
-        return id
-
-    @staticmethod
-    def register_town(cur: sqlite3.Cursor, pattern: str, pnt: List[int]) -> int:
-        pos_id = Sql.register_table(cur, "positions", pattern[:NUM_TILE])
-        dir_id = Sql.register_table(cur, "directions", pattern[NUM_TILE:])
-        pnt_id = Sql.register_table(cur, "points", pnt)
-        twn_id = Sql.register_table(cur, "towns", [pos_id, dir_id, pnt_id], True)
-        return twn_id
+        )
 
     @staticmethod
     def register(
@@ -739,7 +659,6 @@ class Sql:
             elif pattern_files_dir:
                 # 道シノニム.txt にパターンが入ってる場合はそれを読んで記録
                 for pattern_file in glob.glob(os.path.join(pattern_files_dir, "*.txt")):
-                    print(os.path.basename(pattern_file).split(".", 1)[0])
                     for pattern, points in Search.search_point_from_pattern_file(
                         os.path.basename(pattern_file).split(".", 1)[0],
                         pattern_files_dir,
@@ -762,19 +681,11 @@ class Sql:
         conn = sqlite3.connect(dbname)
         cur = conn.cursor()
         try:
-            _, pos_id, dir_id, pnt_id = cur.execute(
+            record = cur.execute(
                 "select * from towns where id = " + str(town_id)
             ).fetchone()
-            pos = cur.execute(
-                "select seq from positions where id = " + str(pos_id)
-            ).fetchone()[0]
-            dir = cur.execute(
-                "select seq from directions where id = " + str(dir_id)
-            ).fetchone()[0]
-            points = cur.execute(
-                "select * from points where id = " + str(pnt_id)
-            ).fetchone()[1:]
-            pattern = pos.zfill(NUM_TILE) + dir.zfill(NUM_TILE)
+            pattern = record[1].zfill(NUM_TILE) + record[2].zfill(NUM_TILE)
+            points = record[3:]
         except:  # noqa: E722
             print("町・得点の取得においてエラーが発生しました")
         finally:
