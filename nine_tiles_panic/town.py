@@ -1,4 +1,10 @@
 #!/usr/bin/env python
+"""
+町に関するモジュール。
+
+Path クラス：町の道のクラス。
+Town クラス：町のクラス。
+"""
 
 from __future__ import annotations
 
@@ -19,20 +25,27 @@ NUM_THEME = config.NUM_THEME
 
 
 class Path:
-    """ Path クラス
+    """Path クラス
 
-    町の道のクラス
-    町を作った時に、タイルの道を繋げて得点計算するために使う
+    町の道のクラス。町の道の始点・終点・長さ・オブジェクトを格納する。
+    町を作った時に、タイルの道を繋げて得点計算するために使う。
 
     Attributes:
-        left_end (int): Path の始点（左端）
-        right_end (int): Path の終点（右端）
-        length (int): タイル1枚を長さ1として数えたときの道の長さ
-        objects (List[Union[Agent, Alien, Hamburger]]): 始点から終点までの\
-            道上のエージェント・宇宙人・ハンバーガーのリスト
+        left_end (int): Path の始点（左端）。
+        right_end (int): Path の終点（右端）。
+        length (int): タイル1枚を長さ1として数えたときの道の長さ。
+        objects (List[Union[Agent, Alien, Hamburger]]): 始点から終点まで
+            の道上のエージェント・宇宙人・ハンバーガーのリスト。
     """
 
     def __init__(self, path_graph: nx.Graph) -> None:
+        """Path クラスのコンストラクタ。
+
+        Args:
+            path_graph (nx.Graph): 町の道の辺をノード、道の上のオブジェ
+                クトがエッジに格納されている Networkx のグラフ。
+                Path.__make_paths() でのみコンストラクトされている。
+        """
         end_nodes = set(Town.OUTER_EDGES) & set(path_graph.nodes)
         self.left_end: int = min(end_nodes)
         self.right_end: int = max(end_nodes)
@@ -129,18 +142,25 @@ class Town:
     """Town クラス
 
     町のクラス
-    Tile の position は以下の通り
-        012
-        345
-        678
-    Path の辺の番号は以下の通り
-          00  04  08
-        01  03  07  11
-          02  06  10
-        13  15  19  23
-          14  18  22
-        25  27  31  35
-          26  30  34
+    Tile の position は以下の通り。
+    ```text
+    +-------+
+    | 0 1 2 |
+    | 3 4 5 |
+    | 6 7 8 |
+    +-------+
+    ```
+
+    Path の辺の番号は以下の通り。
+    ```text
+    +-0-+--4-+-8-+
+    1   3    7  11
+    +-2-+--6-+10-+
+    13  15  19  23
+    +-14+-18-+22-+
+    25  27  31  35
+    +-26+-30-+34-+
+    ```
 
     Attributes:
         pattern (str): 町のパターン文字列（18 桁）

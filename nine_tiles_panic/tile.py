@@ -1,4 +1,11 @@
 #!/usr/bin/env python
+"""
+各タイルに関するモジュール。
+
+Road クラス：タイルの道のクラス。
+TileFace クラス：タイルの面のクラス。
+Tile クラス：タイルの両面のクラス。
+"""
 
 from __future__ import annotations
 
@@ -7,20 +14,23 @@ from typing import List, Optional
 
 
 class Road:
-    """Road クラス
+    """Road クラス。
 
-    タイルの道のクラス
-    辺番号は以下の通り
-         0
-        1 3
-         2
+    タイルの道のクラス。
+    道の辺番号と、道の上のエージェント・宇宙人の向いてる辺番号と、
+    ハンバーガーの数を格納する。辺番号は以下の通り。
+    ```text
+        +-0-+
+        1   3
+        +-2-+
+    ```
 
     Attributes:
-        initial_edge (int): 始点の辺番号 (0-3)
-        terminal_edge (int): 終点の辺番号 (0-3)
-        agent_face (int): エージェントの向いてる方向の辺番号 (0-3)
-        alien_face (int): 宇宙人の向いてる方向の辺番号 (0-3)
-        num_hamburger (int): ハンバーガーの向いてる方向の辺番号 (0-3)
+        initial_edge (int): 道の始点となる辺の番号 (0-3)。
+        terminal_edge (int): 道の終点となる辺の番号 (0-3)。
+        agent_face (int): エージェントの向いてる方向の辺番号 (0-3)。
+        alien_face (int): 宇宙人の向いてる方向の辺番号 (0-3)。
+        num_hamburger (int): ハンバーガーの数。
     """
 
     def __init__(
@@ -31,17 +41,33 @@ class Road:
         alien_face: int = None,
         num_hamburger: int = 0,
     ) -> None:
+        """Road クラスのコンストラクタ。
+
+        フィールドを初期化する。
+
+        Args:
+            initial_edge (int): 道の始点となる辺の番号 (0-3)。
+            terminal_edge (int): 道の終点となる辺の番号 (0-3)。
+            agent_face (int, optional): エージェントの向いている方向
+                (0-3)。初期値は None。
+            alien_face (int, optional): 宇宙人の向いている方向 (0-3)。
+                初期値は None。
+            num_hamburger (int, optional): ハンバーガーの数。初期値は 0。
+        """
         self.initial_edge: int = initial_edge
         self.terminal_edge: int = terminal_edge
         self.agent_face: int = agent_face
         self.alien_face: int = alien_face
         self.num_hamburger: int = num_hamburger
 
-    def __str__(self) -> str:
-        return ", ".join(map(str, self.get_edges()))
-
     def __repr__(self) -> str:
-        return self.__str__()
+        return "Road({}, {}, agent_face={}, alien_face={}, num_hamburger={})".format(
+            self.initial_edge,
+            self.terminal_edge,
+            self.agent_face,
+            self.alien_face,
+            self.num_hamburger,
+        )
 
     def get_initial_edge(self) -> int:
         return self.initial_edge
@@ -83,19 +109,21 @@ class Road:
 
 
 class TileFace:
-    """TileFace クラス
+    """TileFace クラス。
 
-    タイルのおもて面・うら面のクラス
+    タイルのおもて面・うら面のクラス。タイル面の道と、犬・女の子・男の子
+    ・家・UFO・道の外にいるエージェント・道の外に居て捕まっている宇宙人
+    の数を格納する。
 
     Attributes:
-        roads (List(Road)): Road のリスト
-        num_dog (int): 犬の数
-        num_girl (int): 市民（女の子）の数
-        num_boy (int): 市民（男の子）の数
-        num_house (int): 家の数
-        num_ufo (int): UFO の数
-        num_agent_offroad (int): 道の外にいるエージェントの数
-        num_alien_offroad_captured (int): 道の外に居て捕まっている宇宙人の数
+        roads (List(Road)): Road のリスト。
+        num_dog (int): 犬の数。
+        num_girl (int): 市民（女の子）の数。
+        num_boy (int): 市民（男の子）の数。
+        num_house (int): 家の数。
+        num_ufo (int): UFO の数。
+        num_agent_offroad (int): 道の外にいるエージェントの数。
+        num_alien_offroad_captured (int): 道の外に居て捕まっている宇宙人の数。
     """
 
     TILE_SIZE = 100
@@ -111,6 +139,22 @@ class TileFace:
         num_agent_offroad: int = 0,
         num_alien_offroad_captured: int = 0,
     ) -> None:
+        """TileFace クラスのコンストラクタ
+
+        フィールドを初期化する
+
+        Args:
+            roads (List[Road], optional): 道のリスト。初期値は空のリスト。
+            num_dog (int, optional): 犬の数。初期値は 0。
+            num_girl (int, optional): 市民（女の子）の数。初期値は 0。
+            num_boy (int, optional): 市民（男の子）の数。初期値は 0。
+            num_house (int, optional): 家の数。初期値は 0。
+            num_ufo (int, optional): UFO の数。初期値は 0。
+            num_agent_offroad (int, optional):
+                道の外にいるエージェントの数。初期値は 0。
+            num_alien_offroad_captured (int, optional):
+                道の外に居て捕まっている宇宙人の数。初期値は 0。
+        """
         self.roads: List[Road] = roads
         self.num_dog: int = num_dog
         self.num_girl: int = num_girl
@@ -120,8 +164,20 @@ class TileFace:
         self.num_agent_offroad: int = num_agent_offroad
         self.num_alien_offroad_captured: int = num_alien_offroad_captured
 
-    def __str__(self) -> str:
-        return str(self.get_edges())
+    def __repr__(self) -> str:
+        return (
+            "TileFace(roads={}, num_dog={}, num_girl={}, num_boy={}, num_house={},"
+            "num_ufo={}, num_agent_offroad={}, num_alien_offroad_captured={})"
+        ).format(
+            self.roads,
+            self.num_dog,
+            self.num_girl,
+            self.num_boy,
+            self.num_house,
+            self.num_ufo,
+            self.num_agent_offroad,
+            self.num_alien_offroad_captured,
+        )
 
     def get_roads(self) -> List[Road]:
         return self.roads
@@ -179,9 +235,9 @@ class TileFace:
 
 
 class Tile:
-    """Tile クラス
+    """Tile クラス。
 
-    タイルのクラス
+    タイルのクラス。おもて面の TileFace とうら面の TileFace を格納する。
 
     Attributes:
         front_face (TileFace): タイルのおもて面
@@ -189,8 +245,20 @@ class Tile:
     """
 
     def __init__(self, front_face: TileFace, back_face: TileFace = None) -> None:
+        """Tile クラスのコンストラクタ。
+
+        フィールドを初期化する。
+
+        Args:
+
+        """
         self.front_face: TileFace = front_face
         self.back_face: TileFace = back_face
+
+    def __repr__(self) -> str:
+        return "Tile(front_face={}, back_face={})".format(
+            self.front_face, self.back_face
+        )
 
     def __get_front(self) -> TileFace:
         return self.front_face
@@ -206,6 +274,7 @@ class Tile:
 
     @classmethod
     def get_original(cls) -> List[Tile]:
+        """本家のタイルセットを取得する。"""
         tiles = [
             # Tile number: 0
             Tile(
@@ -257,7 +326,7 @@ class Tile:
 
     @classmethod
     def get_synonym(cls) -> List[Tile]:
-        """道の形状だけに着目して一意なタイルを生成（おもて面のみ）"""
+        """道の形状だけに着目して一意なタイルを生成（おもて面のみ）。"""
         tiles = [
             Tile(TileFace()),
             Tile(TileFace(roads=[Road(0, 1)])),
