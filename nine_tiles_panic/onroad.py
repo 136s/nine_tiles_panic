@@ -16,28 +16,30 @@ class Agent:
     """
 
     def __init__(self, face: int) -> None:
+        """Agent クラスのコンストラクタ。
+
+        フィールドを初期化する。
+
+        Args:
+            face (int): 向いている Path の辺番号 (0-35)
+        """
         self.face: int = face
         self.dir: str = ""
         self.is_capturing: bool = False
         self.capturing_alien: int = None
 
     def __str__(self) -> str:
-        return (
-            "<Agent("
-            + str(self.face)
-            + ", "
-            + self.dir
-            + ") "
-            + str(
-                "captures an alien[" + str(self.capturing_alien) + "]"
-                if self.is_capturing
-                else "is free"
-            )
-            + ".>"
+        return "<Agent({}, {}) {}.>".format(
+            self.face,
+            self.dir,
+            "captures an alien[{}]".format(self.capturing_alien)
+            if self.is_capturing
+            else "is free",
         )
 
     def __repr__(self) -> str:
-        return self.__str__()
+        # コンストラクタで入力しない情報が多いので str で対応
+        return str(self)
 
     def get_face(self) -> int:
         return self.face
@@ -76,6 +78,13 @@ class Alien:
     """
 
     def __init__(self, face: int) -> None:
+        """Alien クラスのコンストラクタ。
+
+        フィールドを初期化する。
+
+        Args:
+            face (int): 向いている Path の辺番号 (0-35)
+        """
         self.face: int = face
         self.dir: str = ""
         self.is_captured: bool = False
@@ -84,28 +93,20 @@ class Alien:
         self.eating_hamburger: int = None
 
     def __str__(self) -> str:
-        return (
-            "<Alien("
-            + str(self.face)
-            + ", "
-            + self.dir
-            + ") "
-            + str(
-                "is captured by an agent[" + str(self.captured_agent) + "]"
-                if self.is_captured
-                else "is free"
-            )
-            + " and "
-            + str(
-                "eats a hamburger[" + str(self.eating_hamburger) + "]"
-                if self.eating
-                else "is hangry"
-            )
-            + ".>"
+        return "<Alien({}, {}) {} and {}.>".format(
+            self.face,
+            self.dir,
+            "is captured by an agent[{}]".format(self.captured_agent)
+            if self.is_captured
+            else "is free",
+            "eats a hamburger[{}]".format(self.eating_hamburger)
+            if self.eating
+            else "is hangry",
         )
 
     def __repr__(self) -> str:
-        return self.__str__()
+        # コンストラクタで入力しない情報が多いので str で対応
+        return str(self)
 
     def get_face(self) -> int:
         return self.face
@@ -148,22 +149,18 @@ class Hamburger:
     """
 
     def __init__(self) -> None:
+        """Hamburger クラスのコンストラクタ。"""
         self.is_eaten: bool = False
         self.ate_alien: List[int] = []
 
     def __str__(self) -> str:
-        return (
-            "<Hamburger "
-            + str(
-                "is aten by aliens" + str(self.ate_alien)
-                if self.is_eaten
-                else "is free"
-            )
-            + ".>"
+        return "<Hamburger is {}.>".format(
+            "aten by aliens" + str(self.ate_alien) if self.is_eaten else "free"
         )
 
     def __repr__(self) -> str:
-        return self.__str__()
+        # コンストラクタでは何も入力しないので str で対応
+        return str(self)
 
     def get_face(self) -> int:
         raise NotImplementedError("Hamburger has no face.")
