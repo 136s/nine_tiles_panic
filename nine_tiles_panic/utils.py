@@ -1,4 +1,11 @@
 #!/usr/bin/env python
+"""
+表示や探索などのツールに関するモジュール。
+
+View クラス：タイル面や町を描画するクラス。
+Search クラス：生成可能な町パターンを探索するクラス。
+Sql クラス：探索結果の町や得点を計算して格納するクラス。
+"""
 
 import glob
 from importlib import resources
@@ -25,14 +32,17 @@ NUM_THEME = config.NUM_THEME
 
 
 class View:
-    """View クラス
+    """View クラス。
 
-    オリジナルのタイルのおもて面・うら面や町を描画するクラス
-    数字文字列を入れたら元画像で描画する
+    TileFace または Town インスタンスを描画する。
+    町パターンかタイル面パターンを入れたら本家タイル面で描画する。
 
     Attributes:
-        object (Union[str, TileFace, Town]): 描画したいタイルの面か町のインスタンス
-        image (Image): 描画された Image
+        object (Union[str, TileFace, Town]): 描画したいタイル面か町のイ
+            ンスタンス、もしくは町パターンかタイル面パターンの文字列。
+        image (Image): object を基に描画した Image のインスタンス。
+        drawer (ImageDraw): 疑似町や番号を描画する用の ImageDraw。
+        view_number (bool): タイル面や町に番号を描画する場合は True。
     """
 
     TILE_SIZE = 100
@@ -50,6 +60,19 @@ class View:
         does_display: bool = False,
         view_number: bool = False,
     ) -> None:
+        """View クラスのコンストラクタ。
+
+        フィールドを初期化する。
+
+        Args:
+            object (Union[str, TileFace, Town]): 描画したいタイル面か町
+                のインスタンス、もしくは町パターンかタイル面パターンの文
+                字列。
+            does_display (bool, optional): View インスタンスを作って同時
+                に描画もする場合は True。初期値は False。
+            view_number (bool, optional): タイル面や町に番号を描画する場
+                合は True。初期値は False
+        """
         self.object: Union[TileFace, Town] = object
         self.image: Image = None
         self.drawer: ImageDraw = None
@@ -68,9 +91,9 @@ class View:
             else:
                 raise NotImplementedError(
                     "Pattern input is supported only for lengths of 2 or 18. \
-                     But the length is "
-                    + str(len(self.object))
-                    + "."
+                     But the length is {}.".format(
+                        len(self.object)
+                    )
                 )
 
         # 描画に成功して、希望すれば draw
@@ -278,7 +301,16 @@ class Search:
 
     @staticmethod
     def rotate_synonym_tile(tile_pat: str, angle: int) -> str:
-        """道シノニムのタイルを方向付き 2 桁で入れて回転させる"""
+        """道シノニムのタイルを方向付き 2 桁で入れて回転させる。
+
+        Args:
+            tile_pat (str): 道シノニムのタイルパターン
+                （十の位: 0-4, 一の位: 0-3）。
+            angle (int): 回転する角度 (0-3)。
+
+        Returns:
+            str: 回転したタイル面パターン
+        """
         tile = tile_pat[0]
         dir = int(tile_pat[1])
         if tile in ("0", "4"):
@@ -293,7 +325,15 @@ class Search:
 
     @staticmethod
     def rotate_synonym_town(pattern: str, angle: int) -> str:
-        """町シノニムを回転させる"""
+        """町シノニムを回転させる。
+
+        Args:
+            pattern (str): 町シノニムのパターン（18 桁）。
+            angle (int): 回転する角度 (0-3)。
+
+        Returns:
+            str: 回転した町パターン
+        """
         if angle != 0:
             tiles = [pattern[i] + pattern[i + NUM_TILE] for i in range(NUM_TILE)]
             r_tiles = [Search.rotate_synonym_tile(tile, angle) for tile in tiles]
@@ -307,7 +347,14 @@ class Search:
 
     @staticmethod
     def first_synonym_town(pattern: str) -> str:
-        """町シノニムの回転町の中で最小の町を取得する"""
+        """町シノニムの回転町の中で最小の町を取得する。
+
+        Args:
+            pattern (str): 町シノニムのパターン（18 桁）。
+
+        Returns:
+            str: 回転町シノニムの辞書順で最初の町シノニムのパターン。
+        """
         return str(
             min([int(Search.rotate_synonym_town(pattern, angle)) for angle in range(4)])
         ).zfill(NUM_TILE * 2)
@@ -364,8 +411,8 @@ class Search:
             num_tiles (List[int]): 道シノニムの最大枚数のリスト
             num_angle (List[int]): 道シノニムのユニークな回転回数
 
-        Returns:
-            Generator[str]: 配置可能な町シノニムのパターン
+        Yields:
+            str: 配置可能な町シノニムのパターン
         """
 
         num_synonym = len(num_tiles)
@@ -428,16 +475,16 @@ class Search:
 
     @staticmethod
     def convert_synonym_original(pattern_synonym: str) -> Generator[str, None, None]:
-        """町シノニムのパターンから、original の町のパターンに変換
+        """町シノニムのパターンから、original の町のパターンに変換。
 
         5 種類の道を重複ありで順列を生成し、既定の枚数以下の場合に
-        original のタイルをマッピングして、各タイル 1 枚ずつなら格納
+        original のタイルをマッピングして、各タイル 1 枚ずつなら格納。
 
         Args:
-            pattern_synonym (str): 生成可能な町シノニムのパターン
+            pattern_synonym (str): 生成可能な町シノニムのパターン。
 
-        Returns:
-            Generator[str]: 生成可能な町のパターン
+        Yields:
+            str: 生成可能な町のパターン。
         """
 
         # 道シノニムとオリジナルタイルとの対応（十の位：index、一の位：directon）
@@ -492,7 +539,17 @@ class Search:
     def search_town(
         output: str = None, synonym_output: str = None
     ) -> Generator[str, None, None]:
-        """シノニムで町の生成可能性を確認して全ての町を探索する"""
+        """シノニムで町の生成可能性を確認して全ての町を探索する。
+
+        Args:
+            output (str, optional): 町のパターン文字列を出力するファイル。
+                初期値は None。
+            synonym_output (str, optional): 町シノニムのパターン文字列を
+                出力するファイル。初期値は None。
+
+        Yields:
+            str: 生成可能な町のパターン。
+        """
         if output is not None:
             f = Search.text_io(output)
         for pattern_synonym in Search.search_synonym(synonym_output):
@@ -507,7 +564,16 @@ class Search:
     def search_point(
         output: str = None,
     ) -> Generator[Tuple[str, List[int]], None, None]:
-        """生成可能な町を取得してお題ごとの点数リストを返す"""
+        """生成可能な町を取得してお題ごとの点数リストを返す。
+
+        Args:
+            output (str, optional): 町のパターン文字列を出力するファイル。
+                初期値は None。
+
+        Yields:
+            str: 生成可能な町のパターン。
+            List[int]: お題の点数。お題番号 - 1 の index に格納する。
+        """
         if output is not None:
             f = Search.text_io(output)
         for pattern in Search.search_town():
@@ -522,7 +588,17 @@ class Search:
     def search_point_from_synonym(
         pattern_synonym: str,
     ) -> Generator[Tuple[str, List[int]], None, None]:
-        """町シノニムからお題ごとの点数リストを返す（シノニムでも計算）"""
+        """町シノニムからお題ごとの点数リストを返す（シノニムでも計算）。
+
+        お題の性質に合わせて、3 ステップで得点を計算する。
+
+        Args:
+            pattern_synonym (str): 生成可能な町シノニムのパターン。
+
+        Yields:
+            str: 生成可能な町のパターン。
+            List[int]: お題の点数。お題番号 - 1 の index に格納する。
+        """
 
         synonym_themes = [4, 5, 6, 10, 11, 13, 15]  # 道の形状で計算できるお題
         tile_themes = [3, 7, 9, 12, 21, 22, 23, 24, 25, 26]  # タイル面で計算できるお題
@@ -553,8 +629,16 @@ class Search:
     def search_point_2(
         output: str = None, synonym_output: str = None
     ) -> Generator[Tuple[str, List[int]], None, None]:
-        """生成可能な町を取得してお題ごとの点数リストを返す（シノニムでも計算）"""
+        """生成可能な町を取得してお題ごとの点数リストを返す（シノニムでも計算）。
 
+        Args:
+            output (str, optional): 町のパターン文字列を出力するファイル。
+                初期値は None。
+
+        Yields:
+            str: 生成可能な町のパターン。
+            List[int]: お題の点数。お題番号 - 1 の index に格納する。
+        """
         if output is not None:
             f = Search.text_io(output)
         for pattern_synonym in Search.search_synonym(synonym_output):
@@ -569,7 +653,20 @@ class Search:
     def search_point_from_pattern_file(
         pattern_synonym: str, dir: str = ""
     ) -> Generator[Tuple[str, List[int]], None, None]:
-        """道シノニムのファイル名の中に対応する町パターンが記録されているものを入力"""
+        """事前に得た生成可能な町のパターン文字列から点数計算。
+
+        対応する町パターン文字列が1 行ずつ記録されている町シノニムのファ
+        イル名 `{pattern_synonym}.txt` を入力とする。
+
+        Args:
+            pattern_synonym (str): 町シノニムのパターン文字列
+            dir (str, optional): テキストファイルが格納されているディレ
+                クトリ。初期値は ""。
+
+        Yields:
+            str: 生成可能な町のパターン。
+            List[int]: お題の点数。お題番号 - 1 の index に格納する。
+        """
 
         synonym_themes = [4, 5, 6, 10, 11, 13, 15]  # 道の形状で計算できるお題
         tile_themes = [3, 7, 9, 12, 21, 22, 23, 24, 25, 26]  # タイル面で計算できるお題
@@ -607,6 +704,12 @@ class Sql:
 
     @staticmethod
     def init(dbname: str = OUT_DBNAME) -> None:
+        """データベースファイルを作成する。
+
+        Args:
+            dbname (str, optional): ファイル名。
+                初期値は `config.OUT_DBNAME`。
+        """
         conn = sqlite3.connect(dbname)
         cur = conn.cursor()
         cur.execute(
@@ -622,6 +725,13 @@ class Sql:
 
     @staticmethod
     def register_town(cur: sqlite3.Cursor, pattern: str, pnt: List[int]) -> None:
+        """データベースに 1 つの町と得点を登録する。
+
+        Args:
+            cur (sqlite3.Cursor): カーソルオブジェクト。
+            pattern (str): 町のパターン文字列。
+            pnt (List[int]): お題の点数。
+        """
         cur.execute(
             "insert into towns values(NULL, {}, {}, {})".format(
                 pattern[:NUM_TILE], pattern[NUM_TILE:], ", ".join(map(str, pnt))
@@ -635,6 +745,20 @@ class Sql:
         synonym_file: str = None,
         pattern_files_dir: str = None,
     ) -> None:
+        """全ての生成可能な町とその全てのお題の点数を登録する。
+
+        データベースファイル名以外に事前の計算情報を与えること段階的な探
+        索が可能。何も事前情報がない場合は 0 から探索する。
+
+        Args:
+            dbname (str, optional): データベースファイル名。
+                初期値は `config.OUT_DBNAME`。
+            pattern_file (str, optional): 町パターンのテキストファイル。
+            synonym_file (str, optional): 町シノニムのテキストファイル。
+            pattern_files_dir (str, optional): 町シノニムのファイル名に
+                対応町パターンが記録されたテキストファイル群のディレクト
+                リ。
+        """
         if not os.path.exists(dbname):
             Sql.init(dbname)
         conn = sqlite3.connect(dbname)
@@ -678,6 +802,16 @@ class Sql:
 
     @staticmethod
     def select_town(town_id: int, dbname: str = OUT_DBNAME) -> Tuple[str, Tuple[int]]:
+        """データベースから町とその点数を選択する。
+
+        Args:
+            town_id (int): 町の id。
+            dbname (str, optional): ファイル名。
+                初期値は `config.OUT_DBNAME`。
+        Returns:
+            str: 生成可能な町のパターン。
+            List[int]: お題の点数。
+        """
         conn = sqlite3.connect(dbname)
         cur = conn.cursor()
         try:

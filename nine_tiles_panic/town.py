@@ -67,6 +67,15 @@ class Path:
                     elif obj.get_face() == j:
                         self.objects.append(obj.set_dir("right"))
 
+    def __str__(self) -> str:
+        return "Path from {} to {}, length: {}, objects: {}".format(
+            self.left_end, self.right_end, self.get_length(), self.get_objects()
+        )
+
+    def __repr__(self) -> str:
+        # 道上のオブジェクトが無い道は Path インスタンスから復元できないため str で対応
+        return str(self)
+
     def get_objects(self) -> List[Union[Agent, Alien, Hamburger]]:
         return self.objects
 
@@ -74,7 +83,7 @@ class Path:
         return self.length
 
     def check_food_chain(self) -> Path:
-        """エージェント・宇宙人・ハンバーガーの捕獲・捕食関係を登録"""
+        """エージェント・宇宙人・ハンバーガーの捕獲・捕食関係を登録する。"""
         free_agent_left = None
         free_agent_right = None
         free_alien_left = None
@@ -163,9 +172,14 @@ class Town:
     ```
 
     Attributes:
-        pattern (str): 町のパターン文字列（18 桁）
-        tiles (List[Tile]): 町の構成に使うタイルセット
-        is_completable (bool): 町が作成可能という事前情報のフラグ（計算量削減のため）
+        pattern (str): 町のパターン文字列（18 桁）。
+        tiles (List[Tile]): 町の構成に使うタイルセット。
+        is_completable (bool): 町が作成可能という事前情報のフラグ。
+            計算量削減のために設定する。
+        face (List[TileFace]): index の位置にある TileFace のリスト。
+        making_failed (bool): 道の接続性の観点で町が作成不可能である時に
+            True となるフラグ。
+        paths (List[Path]): 町の道 Path のリスト。
     """
 
     # 町の外周の Path の辺の番号
@@ -175,26 +189,47 @@ class Town:
 
     def __init__(
         self,
-        pattern: str = None,
+        pattern: str,
         tiles: List[Tile] = Tile.get_original(),
         is_completable: bool = False,
     ) -> None:
+        """Town クラスのコンストラクタ。
+
+        フィールドを初期化する。
+
+        Args:
+            pattern (str): 町のパターン文字列（タイル数の 2 倍桁）。
+            tiles (List[Tile]): 町の構成に使うタイルセット。
+                初期値は Tile.get_original()。
+            is_completable (bool, optioal): 町が作成可能という事前情報の
+                フラグ。計算量削減のために設定する。初期値は False。
+        """
+
         self.face: List[TileFace] = [None] * NUM_TILE
         self.making_failed: bool = False
         self.paths: List[Path] = []
         self.is_completable = is_completable
-        if pattern is not None:
+        if self.is_completable or pattern is not None:
             self.make(pattern, tiles)
 
     def get_face(self, position: int) -> TileFace:
         return self.face[position]
 
-    def get_faces(self) -> list[TileFace]:
+    def get_faces(self) -> List[TileFace]:
         return self.face
 
     def add_tile(
         self, position: int, tile: Tile, is_front: bool = True, angle: int = 0
-    ):
+    ) -> Town:
+        """町にタイルを 1 つ置くメソッド。
+
+        Args:
+            position (int): タイルを置く位置 (0-8)。
+            tile (Tile): タイルのインスタンス。
+            is_front (bool, optional): タイルが表なら True。
+                初期値は True。
+            angle (int, optional): タイルの角度 (0-4)。初期値は 0。
+        """
         has_added = False
         adding_face = tile.get_face(is_front, angle)
         if self.get_face(position) is None:
@@ -210,6 +245,14 @@ class Town:
         return self.making_failed
 
     def can_add_tile(self, position: int, adding_face: TileFace) -> bool:
+        """位置にタイル面を置けるかどうか判定する。
+
+        Args:
+            position (int): タイルを置く位置 (0-8)。
+            adding_face (TileFace): 置きたいタイル面。
+        Returns:
+            bool: 道の接続性から、置ける場合は True を返す。
+        """
         can_add = True
         neighbours = self.get_neighbour(position)
         if len(neighbours) != 0:
@@ -231,6 +274,13 @@ class Town:
 
     @classmethod
     def convert_edge(cls, e: int) -> int:
+        """Path の辺番号を変換する。
+
+        Args:
+            e (int): タイル位置 * 4 + タイルの辺番号。
+        Returns:
+            int: Path の辺番号。
+        """
         return (
             e
             if (e in cls.OUTER_EDGES) or (e in cls.INNER_EDGES)
@@ -295,6 +345,13 @@ class Town:
 
     @classmethod
     def get_neighbour_position(cls, position: int) -> list[int]:
+        """辺で接しているタイルのリストを取得する。
+
+        Args:
+            position (int): タイルの位置番号。
+        Returns:
+            List[int]: 隣接するタイルの辺番号リスト。
+        """
         if position == 0:
             return [1, 3]
         elif position == 1:
@@ -346,8 +403,16 @@ class Town:
         pattern: str = "",
         tiles: List[Tile] = Tile.get_original(),
     ) -> None:
-        """前 9 桁: 置くタイルの index、後 9 桁: 置き方（0-3: 表で角度、4-7: 裏で角度 +4）"""
-        if len(pattern) == NUM_TILE * 2:
+        """パターン文字列から Town インスタンスを構築する。
+
+        Args:
+            pattern (str): 町のパターン文字列（タイル数の 2 倍桁）。
+                前 9 桁: position 桁目に置くタイルの index。
+                後 9 桁: 置き方（0-3: 表で角度、4-7: 裏で角度 +4）。
+            tiles (List[Tile], optional): 町の構成に使うタイルセット。
+                初期値は Tile.get_original()。
+        """
+        if self.is_completable or len(pattern) == NUM_TILE * 2:
             for i in range(NUM_TILE):
                 position = i
                 tile = tiles[int(pattern[i])]
@@ -362,14 +427,20 @@ class Town:
                 self.__make_paths()  # 町としての道を作成し、閉路の有無も判定
         else:
             raise NotImplementedError(
-                "Pattern input is supported only for lengths of 2 or 18. \
-                 But the length is "
-                + str(len(self.object))
-                + "."
+                "Pattern input is supported only for lengths of 18. \
+                 But the length is {}".format(
+                    len(pattern)
+                )
             )
 
     def theme_point(self, no: int) -> int:
-        """町と、お題カードの番号を入れると点数を返す"""
+        """1 つのお題の点数を返す。
+
+        Args:
+            no (int): お題の番号。
+        Returns:
+            int: 入力したお題の点数。
+        """
         point = 0
 
         # 宇宙人をつかまえた数が多い
@@ -680,6 +751,13 @@ class Town:
         return point
 
     def get_theme_point(self, is_print: bool = False) -> List[int]:
+        """全てのお題の点数を取得する。
+
+        Args:
+            is_print (bool): True ならお題名とその点数を標準出力する。
+        Returns:
+            List[int]: お題の点数。お題番号 - 1 の index に格納する。
+        """
         points = []
         for theme in range(NUM_THEME):
             points.append(self.theme_point(theme + 1))
