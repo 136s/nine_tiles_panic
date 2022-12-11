@@ -59,9 +59,9 @@ class Path:
         for i, j in pairwise(path_order):
             obj = path_graph[i][j]["object"]
             if obj is not None:
-                if type(obj) == Hamburger:
+                if isinstance(obj, Hamburger):
                     self.objects.append(obj)
-                elif type(obj) in (Agent, Alien):
+                elif isinstance(obj, (Agent, Alien)):
                     if obj.get_face() == i:
                         self.objects.append(obj.set_dir("left"))
                     elif obj.get_face() == j:
@@ -92,7 +92,7 @@ class Path:
         hangry_alien_right = None
         free_hamburger = None
         for i, obj in enumerate(self.objects):
-            if type(obj) == Agent:
+            if isinstance(obj, Agent):
                 if obj.get_dir() == "left":
                     # 左に宇宙人が居るか判定
                     free_alien = None
@@ -115,7 +115,7 @@ class Path:
                         free_agent_left = i  # noqa: F841
                 elif obj.get_dir() == "right":
                     free_agent_right = i
-            if type(obj) == Alien:
+            if isinstance(obj, Alien):
                 # 左に右向きのエージェントが居たら捕まる
                 if free_agent_right is not None:
                     self.objects[free_agent_right].capture(i)
@@ -137,7 +137,7 @@ class Path:
                         hangry_alien_left = i  # noqa: F841
                 elif obj.get_dir() == "right":
                     hangry_alien_right = i
-            if type(obj) == Hamburger:
+            if isinstance(obj, Hamburger):
                 # 左に右向きの空腹宇宙人が居たら食べられる
                 if hangry_alien_right is not None:
                     self.objects[hangry_alien_right].eat(i)
@@ -448,7 +448,7 @@ class Town:
             num_captured_alien = 0
             for path in self.get_paths():
                 for obj in path.get_objects():
-                    if type(obj) == Alien:
+                    if isinstance(obj, Alien):
                         if not obj.is_free():
                             num_captured_alien += 1
             for face in self.get_faces():
@@ -465,16 +465,16 @@ class Town:
                 for obj in path.get_objects():
                     # 右を向いてるエージェントが未発見だったら探索してフラグ立て
                     if not right_face_agent:
-                        if type(obj) == Agent:
+                        if isinstance(obj, Agent):
                             if obj.get_dir() == "right":
                                 right_face_agent = True
                     # 右を向いてるエージェントがいて、左を向いてるエージェントが未発見だったら…
                     else:
                         # 宇宙人を数え上げ
-                        if type(obj) == Alien:
+                        if isinstance(obj, Alien):
                             num_stuck_alien += 1
                         # エージェントが居たら…
-                        if type(obj) == Agent:
+                        if isinstance(obj, Agent):
                             # 左向きだったら登録して初期化
                             if obj.get_dir() == "left":
                                 num_stuck_list.append(num_stuck_alien)
@@ -520,10 +520,10 @@ class Town:
             num_hamburger = 0
             for path in self.get_paths():
                 for obj in path.get_objects():
-                    if type(obj) == Alien:
+                    if isinstance(obj, Alien):
                         if obj.is_free():
                             num_free_alien += 1
-                    elif type(obj) == Hamburger:
+                    elif isinstance(obj, Hamburger):
                         num_hamburger += 1
             point = num_free_alien * num_hamburger
 
@@ -566,7 +566,7 @@ class Town:
             for path in self.get_paths():
                 num_agent = 0
                 for obj in path.get_objects():
-                    if type(obj) == Agent:
+                    if isinstance(obj, Agent):
                         num_agent += 1
                 num_agent_list.append(num_agent)
             point = max(num_agent_list)
@@ -582,9 +582,9 @@ class Town:
                 hamburger_in_path = 0
                 right_face_alien = False
                 for obj in path.get_objects():
-                    if type(obj) == Hamburger:
+                    if isinstance(obj, Hamburger):
                         hamburger_in_path += 1
-                    elif type(obj) == Alien:
+                    elif isinstance(obj, Alien):
                         if obj.is_free():
                             # 右を向いてる宇宙人が居たらここまでのハンバーガーを記録
                             if right_face_alien:
@@ -614,7 +614,7 @@ class Town:
             num_free_alien = 0
             for path in self.get_paths():
                 for obj in path.get_objects():
-                    if type(obj) == Alien:
+                    if isinstance(obj, Alien):
                         if obj.is_free():
                             num_free_alien += 1
             point = num_ufo * num_free_alien
@@ -627,7 +627,7 @@ class Town:
                 num_right_face_alien = 0
                 num_left_face_alien = 0
                 for obj in path.get_objects():
-                    if type(obj) == Agent:
+                    if isinstance(obj, Agent):
                         # エージェントが既にいたらそこまでの左向き宇宙人の数を格納
                         if agent_exists:
                             num_running_alien_list.append(num_left_face_alien)
@@ -636,7 +636,7 @@ class Town:
                         agent_exists = True
                         num_right_face_alien = 0
                         num_left_face_alien = 0
-                    elif type(obj) == Alien:
+                    elif isinstance(obj, Alien):
                         if obj.get_dir() == "right":
                             num_right_face_alien += 1
                         elif obj.get_dir() == "left":
@@ -652,7 +652,7 @@ class Town:
             for path in self.get_paths():
                 num_free_alien = 0
                 for obj in path.get_objects():
-                    if type(obj) == Alien:
+                    if isinstance(obj, Alien):
                         if obj.is_free():
                             num_free_alien += 1
                 num_free_alien_list.append(num_free_alien)
@@ -668,33 +668,33 @@ class Town:
                 for obj in path.get_objects():
                     # 右向きを判定
                     if right_seq_end == "Agent":
-                        if type(obj) == Alien:
+                        if isinstance(obj, Alien):
                             if obj.get_dir() == "right":
                                 right_seq_end = "Alien"
                         if right_seq_end != "Alien":
                             right_seq_end = ""
                     elif right_seq_end == "Alien":
-                        if type(obj) == Hamburger:
+                        if isinstance(obj, Hamburger):
                             num_seq += 1
                         right_seq_end = ""
                     if right_seq_end == "":
-                        if type(obj) == Agent:
+                        if isinstance(obj, Agent):
                             if obj.get_dir() == "right":
                                 right_seq_end = "Agent"
                     # 左向きを判定
                     if left_seq_end == "Hamburger":
-                        if type(obj) == Alien:
+                        if isinstance(obj, Alien):
                             if obj.get_dir() == "left":
                                 left_seq_end = "Alien"
                         if left_seq_end != "Alien":
                             left_seq_end = ""
                     elif left_seq_end == "Alien":
-                        if type(obj) == Agent:
+                        if isinstance(obj, Agent):
                             if obj.get_dir() == "left":
                                 num_seq += 1
                         left_seq_end = ""
                     if left_seq_end == "":
-                        if type(obj) == Hamburger:
+                        if isinstance(obj, Hamburger):
                             left_seq_end = "Hamburger"
             point = num_seq
 

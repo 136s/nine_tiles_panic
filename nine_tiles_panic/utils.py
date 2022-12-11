@@ -79,11 +79,11 @@ class View:
         self.view_number = view_number
 
         # タイプ別に描画
-        if type(self.object) == TileFace:
+        if isinstance(self.object, TileFace):
             self._draw_pseudo_tile_face()
-        elif type(self.object) == Town:
+        elif isinstance(self.object, Town):
             self._draw_pseudo_town()
-        elif type(self.object) == str:
+        elif isinstance(self.object, str):
             if len(self.object) == 2:
                 self._draw_real_tile_face()
             elif len(self.object) == NUM_TILE * 2:
